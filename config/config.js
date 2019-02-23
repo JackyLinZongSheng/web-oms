@@ -7,6 +7,9 @@ export default {
         }],
     ],
     history:"hash",
+    targets: {
+      ie: 11,
+    },
     routes: [
     {
         path: '/user',
