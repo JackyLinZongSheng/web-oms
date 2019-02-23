@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>登录成功</title>
+    </head>
+    <body>
+        登录成功。
+        <script src="http://code.jquery.com/jquery-1.11.3.min.js">
+        </script>
+        <script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js">
+        </script>
+        <script>
+            $(document).ready(function() {
+                localStorage.removeItem('navigator');
+                localStorage.removeItem('permissions');
+                    $.get("/oms/identity").success(function(data) {
+                        // 登出各个系统（如果单点登出生效，这步没什么意义。所以这步是用来保证单点登出的）
+                        var cond = encodeURIComponent(data.user.username);
+                        $.when(
+                            $.get("/cms/sso/logout?local=true&cond=" + cond),
+                            $.get("/oms/sso/logout?local=true&cond=" + cond)
+                        ).always(function() {
+                            if(data.user.hasOwnProperty('groupAccessDtos')&&data.user.groupAccessDtos.length>0){
+                                var navigator = [];
+                                for(var i=0;i<data.user.groupAccessDtos.length;i++){
+                                    navigator.push(data.user.groupAccessDtos[i].groupAccess);
+                                }
+                                localStorage.setItem('navigator',navigator);
+                            }
+                            if(data.user.hasOwnProperty('permissions')&&data.user.permissions.length>0){
+                                var permissions = [];
+                                for(var i=0;i<data.user.permissions.length;i++){
+                                    permissions.push(data.user.permissions[i]);
+                                }
+                                localStorage.setItem('permissions',permissions);
+                            }
+                            $.cookie('idOms', data.user.id, {
+                                path: '/'
+                            });
+                            $.cookie('usernameOms', data.user.username, {
+                                path: '/'
+                            });
+                            window.parent.location = "/";
+                        });
+                    });
+                
+            });
+        </script>
+    </body>
+</html>
